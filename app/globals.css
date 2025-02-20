@@ -2,20 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #5a7c99;
+}
+
+h1,
+h2 {
+  @apply font-bold text-primary text-2xl;
+}
+
+p {
+  @apply text-text text-3xl font-bold;
+}
+
+main {
+  @apply bg-blue-500 max-w-5xl my-12 mx-auto px-8;
+}
+
+button {
+  @apply px-8 py-2 bg-sky-600 text-lg rounded-full flex justify-between items-center gap-5;
 }

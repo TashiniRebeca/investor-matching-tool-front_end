@@ -1,101 +1,153 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { searchInvestors } from "@/lib/api";
+import {words} from "@/lib/data";
+import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
+import {Spotlight} from "@/components/Spotlight";
+
+type Investor = {
+  id: number;
+  name: string;
+  sector: string;
+  funding_stage: string;
+  country: string;
+  investment_size: string;
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [sector, setSector] = useState("");
+  const [fundingStage, setFundingStage] = useState("");
+  const [country, setCountry] = useState("");
+  const [investors, setInvestors] = useState<Investor[]>([]);
+  const [sectors, setSectors] = useState<string[]>([]);
+  const [fundingStages, setFundingStages] = useState<string[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Fetch sector, funding stage, and country options from backend
+  // ✅ Fetch dropdown options on load
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/investor-options");
+        console.log("✅ Dropdown Data:", response.data); // Debugging step
+
+        if (response.data) {
+          setSectors(response.data.sectors || []);
+          setFundingStages(response.data.fundingStages || []);
+          setCountries(response.data.countries || []);
+        } else {
+          console.warn("⚠️ No data received for dropdowns.");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching dropdown options:", error);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
+
+  const handleSearch = async () => {
+    console.log("🔍 Searching investors for:", { sector, fundingStage, country });
+    const data = await searchInvestors(sector, fundingStage, country);
+
+    // @ts-ignore
+    setInvestors(data);
+  };
+
+  return (
+      <div className="relative min-h-screen flex flex-col items-center justify-center text-white">
+        <Spotlight
+            className="-top-40 left-0 md:left-60 md:-top-20"
+            fill="white"
+        />
+
+        {/* 🔥 Header */}
+        <div className="absolute top-10 left-1/2 transform -translate-x-1/2 text-center z-10">
+          <TypewriterEffectSmooth words={words} />
+          <p className="text-white">Find you perfect investor for your startup today....</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+
+        {/* 🟢 Search Section */}
+        <div className="z-10 p-6 text-center bg-white shadow-lg rounded-lg">
+          <h2 className="text-2xl font-bold text-black mb-4">Search for Investors</h2>
+          <div className="flex flex-wrap gap-4 justify-center">
+            {/* 🔹 Sector Dropdown */}
+            <div>
+              <p className="text-black font-semibold">Sector</p>
+              <select className="p-2 border rounded text-black" value={sector} onChange={(e) => setSector(e.target.value)}>
+                <option value="">Select Sector</option>
+                {sectors.length > 0 ? (
+                    sectors.map((sec) => <option key={sec} value={sec}>{sec}</option>)
+                ) : (
+                    <option disabled>Loading...</option>
+                )}
+              </select>
+            </div>
+
+            {/* 🔹 Funding Stage Dropdown */}
+            <div>
+              <p className="text-black font-semibold">Funding Stage</p>
+              <select className="p-2 border rounded text-black" value={fundingStage} onChange={(e) => setFundingStage(e.target.value)}>
+                <option value="">Select Funding Stage</option>
+                {fundingStages.length > 0 ? (
+                    fundingStages.map((stage) => <option key={stage} value={stage}>{stage}</option>)
+                ) : (
+                    <option disabled>Loading...</option>
+                )}
+              </select>
+            </div>
+
+            {/* 🔹 Country Dropdown */}
+            <div>
+              <p className="text-black font-semibold">Country</p>
+              <select className="p-2 border rounded text-black" value={country} onChange={(e) => setCountry(e.target.value)}>
+                <option value="">Select Country</option>
+                {countries.length > 0 ? (
+                    countries.map((city) => <option key={city} value={city}>{city}</option>)
+                ) : (
+                    <option disabled>Loading...</option>
+                )}
+              </select>
+            </div>
+
+            {/* 🔹 Search Button */}
+            <button onClick={handleSearch} className="bg-primary p-2 rounded text-white font-bold">Search</button>
+          </div>
+        </div>
+
+        {/* 🟢 Investors Table */}
+        {investors.length > 0 ? (
+            <div className="w-full max-w-5xl mt-6 bg-white shadow-lg rounded-lg overflow-hidden">
+              <table className="min-w-full text-black">
+                <thead className="bg-primary text-white">
+                <tr>
+                  <th className="p-3">Investor</th>
+                  <th className="p-3">Sector</th>
+                  <th className="p-3">Funding Stage</th>
+                  <th className="p-3">Country</th>
+                  <th className="p-3">Investment Size</th>
+                </tr>
+                </thead>
+                <tbody>
+                {investors.map((inv) => (
+                    <tr key={inv.id} className="border-b">
+                      <td className="p-3">{inv.name}</td>
+                      <td className="p-3">{inv.sector}</td>
+                      <td className="p-3">{inv.funding_stage}</td>
+                      <td className="p-3">{inv.country}</td>
+                      <td className="p-3">{inv.investment_size}</td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+            </div>
+        ) : (
+            <p className="text-gray-300 mt-4">No investors found. Try another search.</p>
+        )}
+      </div>
   );
 }
