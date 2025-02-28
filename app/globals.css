@@ -21,5 +21,5 @@ main {
 }
 
 button {
-  @apply px-8 py-2 bg-sky-600 text-lg rounded-full flex justify-between items-center gap-5;
+  @apply px-8 py-2 bg-slate-300 text-2xl rounded-full flex justify-between items-center gap-8;
 }
