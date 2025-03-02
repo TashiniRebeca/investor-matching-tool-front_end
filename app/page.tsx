@@ -195,13 +195,28 @@
 
 "use client";
 
-import { useState, useEffect, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { searchInvestors } from "@/lib/api";
 import { words } from "@/lib/data";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
 import { Spotlight } from "@/components/Spotlight";
-import { Select, SelectItem, Button, Input, Switch } from "@heroui/react";
+import {
+  Select,
+  SelectItem,
+  Button,
+  Input,
+  Switch,
+  RadioGroup,
+  Radio,
+} from "@heroui/react";
+
+import Swal from "sweetalert2";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Navigation, Pagination } from "swiper/modules";
 
 type Investor = {
   id: number;
@@ -211,6 +226,9 @@ type Investor = {
   country: string;
   investment_min: string;
   investment_max: string;
+  city?: string;
+  prop_tech?: string;
+  tech_medium?: string;
   video_link: string;
 };
 
@@ -225,11 +243,14 @@ export default function Home() {
   const [propTech, setPropTech] = useState("");
   const [techMedium, setTechMedium] = useState("");
   const [investors, setInvestors] = useState<Investor[]>([]);
+
   const [sectors, setSectors] = useState<string[]>([]);
   const [geographies, setGeographies] = useState<string[]>([]);
   const [seriesStages, setSeriesStages] = useState<string[]>([]);
+  const [techMediums, setTechMediums] = useState<string[]>([]);
+  const [propTechOptions, setPropTechOptions] = useState<string[]>([]);
 
-  // Fetch dropdown options on load
+  // ✅ Fetch dropdown options on load
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -242,6 +263,8 @@ export default function Home() {
           setSectors(response.data.sectors || []);
           setGeographies(response.data.geographies || []);
           setSeriesStages(response.data.seriesStages || []);
+          setTechMediums(response.data.techMediums || []);
+          setPropTechOptions(response.data.propTechOptions || []);
         } else {
           console.warn("⚠️ No data received for dropdowns.");
         }
@@ -253,7 +276,17 @@ export default function Home() {
     fetchOptions();
   }, []);
 
+  // ✅ Handle Search
   const handleSearch = async () => {
+    // if (!sector) {
+    //   Swal.fire({
+    //     icon: "error",
+    //     title: "Oops...",
+    //     text: "You must select a sector to search.",
+    //     confirmButtonColor: "#061a34",
+    //   });
+    //   return;
+    // }
     console.log("🔍 Searching investors...");
     const data = await searchInvestors({
       sector,
@@ -291,7 +324,7 @@ export default function Home() {
       <div className="relative z-10 p-6 mt-8 text-center bg-slate-300 shadow-lg rounded-lg w-full max-w-3xl">
         {/* Toggle Normal / Advanced Search */}
         <div className="flex justify-between items-center">
-          <p className="text-black font-semibold">Advanced Search</p>
+          <p className="text-black font-semibold">Search</p>
           <Switch
             isSelected={isAdvanced}
             onChange={() => setIsAdvanced(!isAdvanced)}
@@ -299,13 +332,13 @@ export default function Home() {
         </div>
 
         {/* Normal Search */}
-        <div className="flex flex-wrap gap-4 justify-between mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <Select
-            className="w-1/2"
+            className="w-3/4"
             label="Sector"
             onChange={(e) => setSector(e.target.value)}
+            isRequired={true}
           >
-            <SelectItem value="">Select Sector</SelectItem>
             {sectors.map((sec) => (
               <SelectItem key={sec} value={sec}>
                 {sec}
@@ -314,11 +347,10 @@ export default function Home() {
           </Select>
 
           <Select
-            className="w-1/2"
+            className="w-3/4"
             label="Geography"
             onChange={(e) => setGeography(e.target.value)}
           >
-            <SelectItem value="">Select Geography</SelectItem>
             {geographies.map((geo) => (
               <SelectItem key={geo} value={geo}>
                 {geo}
@@ -327,24 +359,25 @@ export default function Home() {
           </Select>
 
           <Input
-            className="w-1/2"
+            className="w-3/4"
             type="number"
             placeholder="Investment Min"
             onChange={(e) => setInvestmentMin(e.target.value)}
+            height={50}
           />
           <Input
-            className="w-1/2"
+            className="w-3/4"
             type="number"
             placeholder="Investment Max"
             onChange={(e) => setInvestmentMax(e.target.value)}
+            height={50}
           />
 
           <Select
-            className="w-full"
+            className="w-3/4"
             label="Series"
             onChange={(e) => setSeries(e.target.value)}
           >
-            <SelectItem value="">Select Series</SelectItem>
             {seriesStages.map((stage) => (
               <SelectItem key={stage} value={stage}>
                 {stage}
@@ -357,23 +390,80 @@ export default function Home() {
         {isAdvanced && (
           <div className="flex flex-wrap gap-4 justify-between mt-4">
             <Input
-              className="w-1/2"
+              className="w-2/4"
               placeholder="City"
               onChange={(e) => setCity(e.target.value)}
             />
+            <div className="w-1/3 gap-2 flex flex-row text-left -mt-3">
+              <RadioGroup
+                label="Prop-Tech Only?"
+                orientation="horizontal"
+                className="text-slate-700 text-sm font-medium mt-3"
+              >
+                <div className="flex flex-row items-center gap-10">
+                  <label className="flex items-center gap-2">
+                    <Radio
+                      value="Yes"
+                      checked={propTech === "Yes"}
+                      onChange={(e) => setPropTech(e.target.value)}
+                      className=" h-4 text-primary-150 focus:ring-primary-50"
+                    />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <Radio
+                      value="No"
+                      checked={propTech === "No"}
+                      onChange={(e) => setPropTech(e.target.value)}
+                      className="h-4 text-primary-150 focus:ring-primary-50"
+                    />
+                    No
+                  </label>
+                </div>
+              </RadioGroup>
+            </div>
+            {/* <div className="w-2/5 gap-5 flex flex-row text-left mt-3">
+              <p className="text-slate-500 text-sm font-thin">
+                Prop-Tech Only?
+              </p>
+              <div className="flex flex-row gap-4 -mt-2">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="propTech"
+                    value="Yes"
+                    checked={propTech === "Yes"}
+                    onChange={(e) => setPropTech(e.target.value)}
+                    className="w-5 h-5 text-primary-150 focus:ring-primary-50"
+                  />
+                  <span className="text-black">Yes</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="propTech"
+                    value="No"
+                    checked={propTech === "No"}
+                    onChange={(e) => setPropTech(e.target.value)}
+                    className="w-5 h-5 text-primary-150 focus:ring-primary-50"
+                  />
+                  <span className="text-black">No</span>
+                </label>
+              </div>
+            </div> */}
+
             <Select
-              className="w-1/2"
-              label="Prop-Tech Only?"
-              onChange={(e) => setPropTech(e.target.value)}
-            >
-              <SelectItem value="Yes">Yes</SelectItem>
-              <SelectItem value="No">No</SelectItem>
-            </Select>
-            <Input
-              className="w-full"
-              placeholder="Tech Medium"
+              className="w-3/4"
+              label="Tech Medium"
               onChange={(e) => setTechMedium(e.target.value)}
-            />
+            >
+              {techMediums.map((medium) => (
+                <SelectItem key={medium} value={medium}>
+                  {medium}
+                </SelectItem>
+              ))}
+            </Select>
           </div>
         )}
 
@@ -387,7 +477,7 @@ export default function Home() {
       </div>
 
       {/* 🟢 Investor Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {investors.map((inv) => (
           <div
             key={inv.id}
@@ -398,13 +488,13 @@ export default function Home() {
               <strong>Sector:</strong> {inv.sector}
             </p>
             <p>
-              <strong>Stage:</strong> {inv.funding_stage}
+              <strong>Series:</strong> {inv.funding_stage}
             </p>
             <p>
               <strong>Geography:</strong> {inv.country}
             </p>
             <p>
-              <strong>Investment:</strong> ${inv.investment_min} - $
+              <strong>Investment Range:</strong> ${inv.investment_min} - $
               {inv.investment_max}
             </p>
             <a
@@ -416,13 +506,73 @@ export default function Home() {
             </a>
           </div>
         ))}
+      </div> */}
+      <div className="w-[1500px] justify-center items-center m-auto p-4">
+        {investors.length > 0 ? (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            spaceBetween={20}
+            effect="slide"
+            slidesPerView={investors.length <= 2 ? investors.length : 3}
+            navigation
+            pagination={{ clickable: true }}
+            breakpoints={{
+              1280: {
+                slidesPerView: investors.length <= 2 ? investors.length : 3,
+              },
+              1024: {
+                slidesPerView: investors.length <= 2 ? investors.length : 2,
+              },
+              768: { slidesPerView: 1 },
+            }}
+            className={`w-full h-full flex ${
+              investors.length <= 2 ? "justify-center" : ""
+            }`}
+          >
+            {investors.map((investor, index) => (
+              <SwiperSlide key={index} className="flex justify-center">
+                <div className="w-[1000px] md:w-[350px] lg:w-[400px] bg-white rounded-lg p-6 transition-transform transform hover:scale-105">
+                  <h3 className="text-lg text-primary font-semibold">
+                    {investor.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">{investor.country}</p>
+                  <p className="mt-2 text-gray-800">
+                    Sector: {investor.sector}
+                  </p>
+                  <p className="mt-2 text-gray-800">
+                    Series: {investor.funding_stage}
+                  </p>
+                  <p className="text-gray-800">
+                    Investment Range: ${investor.investment_min} - $
+                    {investor.investment_max}
+                  </p>
+                  {investor.video_link && (
+                    <a
+                      href={investor.video_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline mt-2 block"
+                    >
+                      Watch Video
+                    </a>
+                  )}
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          <p className="text-center text-gray-300 mt-10">
+            No investors found. Try another search.
+          </p>
+        )}
       </div>
+
       {/* No investors found message */}
-      {investors.length === 0 && (
+      {/* {investors.length === 0 && (
         <p className="text-gray-300 mt-10">
           No investors found. Try another search.
         </p>
-      )}
+      )} */}
     </div>
   );
 }

@@ -43,7 +43,7 @@ type Investor = {
   video_link: string;
 };
 
-// Updated search function to handle both Normal & Advanced search
+// Search Investors (Handles both Normal & Advanced Search)
 export const searchInvestors = async (searchParams: {
   sector?: string;
   geography?: string;
@@ -60,7 +60,7 @@ export const searchInvestors = async (searchParams: {
       params: searchParams,
     });
 
-    return response.data; // TypeScript now knows this is Investor[]
+    return response.data; // TypeScript knows this is Investor[]
   } catch (error) {
     console.error("❌ Error fetching investors:", error);
     return [];
