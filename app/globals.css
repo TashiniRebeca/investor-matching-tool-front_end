@@ -23,3 +23,8 @@ main {
 button {
   @apply px-8 py-2 bg-slate-300 text-2xl rounded-full flex justify-between items-center gap-8;
 }
+
+:root {
+  --swiper-navigation-size: 45px !important;
+
+}

@@ -1,0 +1,13 @@
+.swiper-button-next,
+.swiper-button-prev {
+    color: rgb(15, 15, 74);
+    padding: 8px 16px;
+
+}
+
+.swiper-pagination-bullet {
+    background-color: rgb(15, 15, 74);
+    margin: 50px;
+    width: 10px;
+    height: 10px;
+}
