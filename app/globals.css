@@ -26,5 +26,6 @@ button {
 
 :root {
   --swiper-navigation-size: 45px !important;
-
+  --primary-color: #061a34;
+  --secondary-color: #f9f9f9;
 }

@@ -9,7 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
     "@heroui/react": "^2.7.2",
+    "@mui/lab": "^6.0.0-beta.30",
+    "@mui/material": "^6.4.7",
     "axios": "^1.7.9",
     "clsx": "^2.1.1",
     "framer-motion": "^12.4.5",
@@ -20,7 +24,8 @@
     "react-export-table-to-excel": "^1.0.6",
     "sweetalert2": "^11.17.2",
     "swiper": "^11.2.4",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

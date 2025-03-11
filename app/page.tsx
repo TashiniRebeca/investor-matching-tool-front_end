@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-
-const API_URL = "http://localhost:5000";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { searchInvestors } from "@/lib/api";
 import { words } from "@/lib/data";
 import { TypewriterEffectSmooth } from "@/components/ui/typewriter-effect";
-import { Spotlight } from "@/components/Spotlight";
+import { Spotlight } from "@/components/ui/Spotlight";
+import { motion } from "framer-motion";
 import {
   Select,
   SelectItem,
@@ -16,6 +15,7 @@ import {
   Switch,
   RadioGroup,
   Radio,
+  Tooltip,
 } from "@heroui/react";
 
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,10 +24,20 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import "../public/custom-swiper.css";
-import {
-  DownloadTableExcel,
-  // useDownloadExcel,
-} from "react-export-table-to-excel";
+import Box from "@mui/material/Box";
+import Tab from "@mui/material/Tab";
+import TabContext from "@mui/lab/TabContext";
+import TabList from "@mui/lab/TabList";
+import TabPanel from "@mui/lab/TabPanel";
+import { styled } from "@mui/material/styles";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell, { tableCellClasses } from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import * as XLSX from "xlsx";
 
 type Investor = {
   id: number;
@@ -42,6 +52,66 @@ type Investor = {
   prop_tech?: string;
   tech_medium?: string;
   video_link: string;
+};
+
+const API_URL = "http://localhost:5000";
+
+const Background = () => {
+  return (
+    <motion.svg
+      width="400"
+      height="400"
+      viewBox="0 0 400 400"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="absolute inset-0 z-0 blur-sm"
+      variants={{
+        hover: {
+          scale: 1.1,
+        },
+      }}
+      transition={{
+        duration: 1,
+        ease: "backInOut",
+      }}
+    >
+      <motion.circle
+        variants={{
+          hover: {
+            scaleY: 0.5,
+            y: -25,
+          },
+        }}
+        transition={{
+          duration: 1,
+          ease: "backInOut",
+          delay: 0.2,
+        }}
+        cx="199.5"
+        cy="141.5"
+        r="112.5"
+        fill="#9ab0c3"
+      />
+      <motion.ellipse
+        variants={{
+          hover: {
+            scaleY: 2.25,
+            y: -25,
+          },
+        }}
+        transition={{
+          duration: 1,
+          ease: "backInOut",
+          delay: 0.2,
+        }}
+        cx="199.5"
+        cy="327"
+        rx="112.5"
+        ry="52"
+        fill="#9ab0c3"
+      />
+    </motion.svg>
+  );
 };
 
 export default function Home() {
@@ -69,7 +139,26 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("manual"); // State for tabs
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<Investor[]>([]);
-  const tableref = useRef(null);
+
+  const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+      backgroundColor: "var(--primary-color) !important",
+      color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.body}`]: {
+      fontSize: 14,
+    },
+  }));
+
+  const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    "&:nth-of-type(odd)": {
+      backgroundColor: theme.palette.action.hover,
+    },
+
+    "&:last-child td, &:last-child th": {
+      border: 0,
+    },
+  }));
 
   // Fetch dropdown options on load
   useEffect(() => {
@@ -125,441 +214,613 @@ export default function Home() {
     }
   };
 
-  // Function to export results
-  // const exportResults = async () => {
-  //   if (!searchQuery.trim()) {
-  //     console.error(" No search query provided.");
-  //     return;
-  //   }
+  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    setActiveTab(newValue);
+  };
 
-  //   try {
-  //     const response = await axios.get(`${API_URL}/api/exportResults`, {
-  //       params: { sector: searchQuery },
-  //       responseType: "blob", // Ensures it is handled as a file
-  //     });
+  const exportToExcel = () => {
+    const filteredInvestorDetails = results.map((investor) => ({
+      Name: investor.name,
+      Sector: investor.sector,
+      Email: investor.email,
+      Investment_Range: `${investor.investment_min} - ${investor.investment_max}`,
+      City: investor.city,
+    }));
 
-  //     // Create a download link for the Excel file
-  //     const url = window.URL.createObjectURL(new Blob([response.data]));
-  //     const link = document.createElement("a");
-  //     link.href = url;
-  //     link.setAttribute("download", "Investor_Results.xlsx");
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     link.remove();
-  //   } catch (error) {
-  //     console.error("❌ Error exporting results:", error);
-  //   }
-  // };
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(filteredInvestorDetails);
+    XLSX.utils.book_append_sheet(wb, ws, "Investors");
+    XLSX.writeFile(wb, "Investor_Results.xlsx");
+  };
+
+  const clearManualSearch = () => {
+    setSearchQuery("");
+    setResults([]);
+  };
+
+  const clearFilteredSearch = () => {
+    setSector("");
+    setGeography("");
+    setInvestmentMin("");
+    setInvestmentMax("");
+    setSeries("");
+    setCity("");
+    setPropTech("");
+    setTechMedium("");
+    setIsAdvanced(false);
+    setInvestors([]);
+  };
 
   return (
-    <div className="flex flex-col min-h-screen items-center  text-white p-6 px-4 md:px-6 lg:px-8">
+    <div className="flex flex-col min-h-screen items-center text-white p-6 px-4 sm:p-4 md:p-6 lg:p-8 overflow-x-hidden">
       <Spotlight
         className="-top-40 left-0 md:left-60 md:-top-20"
         fill="white"
       />
 
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center px-4 py-6 md:py-8 max-w-full overflow-hidden">
         <TypewriterEffectSmooth
           words={words}
-          className="text-primary text-3xl md:text-5xl"
+          className="text-primary text-center text-xl"
         />
-        <p className="text-white text-sm md:text-lg">
+        <p className="text-white text-sm md:text-lg mt-2">
           Find your perfect investor for your startup today...
         </p>
       </div>
 
-      <div className="flex mt-10 gap-5">
-        <Button
-          onClick={() => setActiveTab("manual")}
-          className={`text-xl forced-color-adjust-none ${
-            activeTab === "manual"
-              ? "border-b-2 border-b-primary-800 font-bold"
-              : "text-gray-500"
-          }`}
-        >
-          Manual Search
-        </Button>
-        <Button
-          onClick={() => setActiveTab("filtered")}
-          className={`text-xl ${
-            activeTab === "filtered"
-              ? "border-b-2 border-b-primary-800 font-bold"
-              : "text-gray-500"
-          }`}
-        >
-          Filtered Search
-        </Button>
-      </div>
-
-      {/* Show Manual Search UI */}
-      {activeTab === "manual" && (
-        <div className="mt-28">
-          {/* <h2 className="text-xl font-bold mb-4">Search Investors by Sector</h2> */}
-          <div className="relative justify-center flex gap-5 items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="size-6 text-primary-900"
+      <Box
+        sx={{
+          width: "100%",
+          marginTop: { xs: "30px", sm: "40px", md: "55px" },
+        }}
+      >
+        <TabContext value={activeTab}>
+          <Box>
+            <TabList
+              onChange={handleChange}
+              aria-label="lab API tabs example"
+              centered
+              sx={{
+                "& .MuiTab-root": {
+                  color: "var(--primary-color)",
+                  fontSize: { xs: "1rem", sm: "1.15rem", md: "1.25rem" },
+                  padding: { xs: "8px 12px", sm: "12px 16px" },
+                },
+                "& .Mui-selected": {
+                  color: "white !important",
+                  fontWeight: "bold",
+                },
+                "& .MuiTabs-indicator": {
+                  backgroundColor: "var(--primary-color)",
+                },
+              }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
-              />
-            </svg>
+              <Tab label="Manual" value="manual" />
+              <Tab label="Filtered" value="filtered" />
+            </TabList>
+          </Box>
+          <TabPanel
+            value="manual"
+            sx={{ padding: { xs: "16px 0", sm: "24px 16px" } }}
+          >
+            {/* Show Manual Search UI */}
+            {activeTab === "manual" && (
+              <div className="mt-8 sm:mt-16 md:mt-20">
+                <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4">
+                  <div className="relative flex max-w-md items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="absolute left-3 size-6 text-primary-900"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
+                      />
+                    </svg>
 
-            <input
-              type="text"
-              placeholder="Enter Sector (e.g. Fintech, AI, PropTech etc.)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleManualSearch()}
-              className="border p-2 rounded text-primary w-[350px] placeholder:text-primary-800"
-            />
-            <button
-              onClick={handleManualSearch}
-              className="bg-primary-800 text-[20px] text-white py-1.5 rounded-full"
-            >
-              Search
-            </button>
-          </div>
-
-          {results.length > 0 ? (
-            <div className="mt-4">
-              <DownloadTableExcel
-                currentTableRef={tableref.current}
-                filename="Investor_Results"
-                sheet="Investors"
-              >
-                <button
-                  // onClick={exportResults}
-                  // onClick={onDowanload}
-                  className="mt-8 mb-2 bg-accent-500 text-[20px] text-primary px-1.5 py-0.5 rounded"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 25"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="size-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                    <input
+                      type="text"
+                      placeholder="Enter Sector (e.g. Fintech, AI, PropTech etc.)"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleManualSearch()
+                      }
+                      className="border border-primary pl-10 p-2 rounded text-primary w-[350px] placeholder:text-primary-800"
                     />
-                  </svg>
-                  Export
-                </button>
-              </DownloadTableExcel>
-              <table
-                ref={tableref}
-                className="border-collapse border border-gray-300 w-full"
-              >
-                <thead>
-                  <tr className="bg-primary-800">
-                    <th className="border p-2">Investor Name</th>
-                    <th className="border p-2">Sector</th>
-                    <th className="border p-2">Email</th>
-                    <th className="border p-2">Series</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((investor, index) => (
-                    <tr key={index}>
-                      <td className="border p-2">{investor.name}</td>
-                      <td className="border p-2">{investor.sector}</td>
-                      <td className="border p-2">
-                        <a
-                          href={`mailto:${investor.email}`}
-                          className="text-primary"
-                        >
-                          {investor.email}
-                        </a>
-                      </td>
-                      <td className="border p-2">{investor.funding_stage}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-gray-300 text-center mt-4">
-              No matching investors found.
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Show Filtered Search UI */}
-      {activeTab === "filtered" && (
-        <div className="mt-4 w-full max-w-3xl text-center">
-          {/* <h2 className="text-xl font-bold mb-4">Filtered Search</h2> */}
-          <div className="p-6 mt-8 text-center bg-slate-300 shadow-lg rounded-lg w-full max-w-3xl">
-            {/* Toggle - Normal / Advanced Search */}
-            <div className="flex justify-between items-center">
-              <p className="text-black font-semibold">Filtered Search</p>
-              <Switch
-                isSelected={isAdvanced}
-                onChange={() => setIsAdvanced(!isAdvanced)}
-              />
-            </div>
-
-            {/* Normal Search */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <Select
-                className="w-3/4"
-                label="Sector"
-                onChange={(e) => setSector(e.target.value)}
-                // isRequired={true}
-              >
-                {sectors.map((sec) => (
-                  <SelectItem key={sec} value={sec}>
-                    {sec}
-                  </SelectItem>
-                ))}
-              </Select>
-
-              <Select
-                className="w-3/4"
-                label="Country"
-                onChange={(e) => setGeography(e.target.value)}
-              >
-                {geographies.map((geo) => (
-                  <SelectItem key={geo} value={geo}>
-                    {geo}
-                  </SelectItem>
-                ))}
-              </Select>
-
-              <Input
-                className="w-3/4"
-                type="number"
-                placeholder="Investment Min"
-                onChange={(e) => setInvestmentMin(e.target.value)}
-                height={50}
-              />
-              <Input
-                className="w-3/4"
-                type="number"
-                placeholder="Investment Max"
-                onChange={(e) => setInvestmentMax(e.target.value)}
-                height={50}
-              />
-
-              <Select
-                className="w-3/4"
-                label="Series"
-                onChange={(e) => setSeries(e.target.value)}
-              >
-                {seriesStages.map((stage) => (
-                  <SelectItem key={stage} value={stage}>
-                    {stage}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            {/* Advanced Search */}
-            {isAdvanced && (
-              <div className="flex flex-wrap gap-4 justify-between mt-4">
-                <Select
-                  className="w-[37%]"
-                  label="City"
-                  onChange={(e) => setCity(e.target.value)}
-                >
-                  {cities.map((city) => (
-                    <SelectItem key={city} value={city}>
-                      {city}
-                    </SelectItem>
-                  ))}
-                </Select>
-                <div className="w-[47%] gap-2 flex flex-row text-left -mt-3">
-                  <RadioGroup
-                    label="Prop-Tech Only?"
-                    orientation="horizontal"
-                    className="text-slate-700 text-sm font-medium mt-3"
-                  >
-                    <div className="flex flex-row items-center gap-5">
-                      <label className="flex items-center gap-2">
-                        <Radio
-                          value="Yes"
-                          checked={propTech === "Yes"}
-                          onChange={(e) => setPropTech(e.target.value)}
-                          className=" h-4 text-primary-150 focus:ring-primary-50"
-                        />
-                        Yes
-                      </label>
-                      <label className="flex items-center gap-2">
-                        <Radio
-                          value="No"
-                          checked={propTech === "No"}
-                          onChange={(e) => setPropTech(e.target.value)}
-                          className="h-4 text-primary-150 focus:ring-primary-50"
-                        />
-                        No
-                      </label>
-                    </div>
-                  </RadioGroup>
+                  </div>
+                  <div className="flex gap-2 mt-2 sm:mt-0">
+                    <Button
+                      onClick={handleManualSearch}
+                      className="bg-primary-800 font-bold text-white py-2 px-4 rounded-full"
+                    >
+                      Search
+                    </Button>
+                    <Button
+                      onClick={clearManualSearch}
+                      className="bg-red-500 font-bold text-white py-1.5 px-3 rounded-full ml-1"
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </div>
 
-                <Select
-                  className="w-[37%]"
-                  label="Tech Medium"
-                  onChange={(e) => setTechMedium(e.target.value)}
-                >
-                  {techMediums.map((medium) => (
-                    <SelectItem key={medium} value={medium}>
-                      {medium}
-                    </SelectItem>
-                  ))}
-                </Select>
+                {results.length > 0 ? (
+                  <div className="mt-4 overflow-x-auto">
+                    <Button
+                      onClick={exportToExcel}
+                      className="mt-6 mb-3 bg-accent-500 p-2 font-bold text-primary px-4 py-1.5 rounded flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 20 25"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="size-5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"
+                        />
+                      </svg>
+                      Export
+                    </Button>
+                    <div className="overflow-x-auto pb-2">
+                      <TableContainer
+                        component={Paper}
+                        sx={{
+                          maxHeight: { xs: 500, sm: 600 },
+                          overflowY: "auto",
+                          "&::-webkit-scrollbar": {
+                            width: "8px",
+                            height: "8px",
+                          },
+                          "&::-webkit-scrollbar-thumb": {
+                            backgroundColor: "rgba(154, 176, 195, 0.5)",
+                            borderRadius: "4px",
+                          },
+                        }}
+                      >
+                        <Table
+                          sx={{ minWidth: { xs: 600, sm: 700 } }}
+                          aria-label="customized table"
+                          stickyHeader
+                          className="border-collapse border w-full"
+                        >
+                          <TableHead
+                            style={{
+                              backgroundColor: "bg-primary-800",
+                              color: "white",
+                            }}
+                          >
+                            <TableRow>
+                              <StyledTableCell className="bg-primary-700">
+                                Investor Name
+                              </StyledTableCell>
+                              <StyledTableCell
+                                className="bg-primary-700"
+                                align="left"
+                              >
+                                City
+                              </StyledTableCell>
+                              <StyledTableCell
+                                className="bg-primary-700"
+                                align="left"
+                              >
+                                Sector
+                              </StyledTableCell>
+                              <StyledTableCell
+                                className="bg-primary-700"
+                                align="left"
+                              >
+                                Email
+                              </StyledTableCell>
+                              <StyledTableCell
+                                className="bg-primary-700"
+                                align="left"
+                              >
+                                Series
+                              </StyledTableCell>
+                              <StyledTableCell
+                                className="bg-primary-700"
+                                align="left"
+                              >
+                                Investment Range(Min-Max)
+                              </StyledTableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {results.map((row, index) => (
+                              <StyledTableRow
+                                key={index}
+                                sx={{ cursor: "pointer" }}
+                              >
+                                <StyledTableCell component="th" scope="row">
+                                  {row.name}
+                                </StyledTableCell>
+                                <StyledTableCell align="left">
+                                  {row.city}
+                                </StyledTableCell>
+                                <StyledTableCell align="left">
+                                  {row.sector}
+                                </StyledTableCell>
+                                <StyledTableCell align="left">
+                                  <a
+                                    href={`mailto:${row.email}`}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {row.email}
+                                  </a>
+                                </StyledTableCell>
+                                <StyledTableCell align="left">
+                                  {row.funding_stage}
+                                </StyledTableCell>
+                                <StyledTableCell align="left">
+                                  ${row.investment_min} - ${row.investment_max}
+                                </StyledTableCell>
+                              </StyledTableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-300 text-center mt-8">
+                    No matching investors found.
+                  </p>
+                )}
               </div>
             )}
-
-            {/* Search Button */}
-            <Button
-              onClick={handleSearch}
-              className="bg-primary p-2 mt-6 rounded-full text-white font-bold"
-            >
-              Search
-            </Button>
-          </div>
-
-          <div className="w-[1500px] max-w-7xl ml-0 pt-5 pr-30 pl-30 text-left">
-            {investors.length > 0 ? (
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={20}
-                effect="slide"
-                slidesPerView={3}
-                navigation
-                centeredSlides={false}
-                initialSlide={0}
-                pagination={{ clickable: true }}
-                breakpoints={{
-                  1280: { slidesPerView: 3 },
-                  1024: { slidesPerView: 2 },
-                  768: { slidesPerView: 1 },
-                }}
-                className="w-full h-full justify-start"
-              >
-                {investors.map((investor, index) => (
-                  <SwiperSlide key={index} className="flex justify-start">
-                    <div className="w-[1000px] md:w-[350px] lg:w-[400px] bg-white rounded-lg p-6 transition-transform transform hover:scale-105 hover:bg-[#a8b6c2]">
-                      <h3 className="text-3xl text-primary font-semibold">
-                        {investor.name}
-                      </h3>
-                      <p className="text-base text-gray-600">{investor.city}</p>
-                      <p className="mt-2 text-xl text-gray-800">
-                        Sector: {investor.sector}
+          </TabPanel>
+          <TabPanel
+            value="filtered"
+            sx={{ padding: { xs: "16px 0", sm: "24px 16px" } }}
+          >
+            {/* Show Filtered Search UI */}
+            {activeTab === "filtered" && (
+              <div className="flex justify-center items-center w-full mx-auto">
+                <div className="mt-2 w-full max-w-3xl justify-end items-center">
+                  <div className="p-4 sm:p-6 mt-2 sm:mt-8 justify-center items-center text-center bg-slate-300 shadow-lg rounded-lg w-full max-w-3xl">
+                    {/* Toggle - Normal / Advanced Search */}
+                    <div className="flex justify-between items-center">
+                      <p className="text-black font-semibold text-sm sm:text-base">
+                        Filtered Search
                       </p>
-                      <p className="mt-2 text-xl text-gray-800">
-                        Series: {investor.funding_stage}
-                      </p>
-                      <p className="text-xl text-gray-800">
-                        Investment Range: ${investor.investment_min} - $
-                        {investor.investment_max}
-                      </p>
-                      <Button
-                        onClick={() => setSelectedInvestor(investor)}
-                        className="bg-primary p-2 mt-6 rounded text-white font-bold"
+                      <Tooltip
+                        content="Advanced Search"
+                        color="primary"
+                        showArrow={true}
                       >
-                        Get Details
+                        <Switch
+                          isSelected={isAdvanced}
+                          onChange={() => setIsAdvanced(!isAdvanced)}
+                          size="md"
+                        />
+                      </Tooltip>
+                    </div>
+
+                    {/* Normal Search */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                      <Select
+                        className="w-3/4"
+                        label="Sector"
+                        variant="underlined"
+                        onChange={(e) => setSector(e.target.value)}
+                        popoverProps={{
+                          placement: "bottom",
+                          offset: 10,
+                          shouldFlip: true,
+                        }}
+                        // isRequired={true}
+                      >
+                        {sectors.map((sec) => (
+                          <SelectItem key={sec} value={sec}>
+                            {sec}
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Select
+                        className="w-3/4"
+                        label="Country"
+                        variant="underlined"
+                        onChange={(e) => setGeography(e.target.value)}
+                      >
+                        {geographies.map((geo) => (
+                          <SelectItem key={geo} value={geo}>
+                            {geo}
+                          </SelectItem>
+                        ))}
+                      </Select>
+
+                      <Input
+                        className="w-3/4"
+                        type="number"
+                        placeholder="Investment Min"
+                        onChange={(e) => setInvestmentMin(e.target.value)}
+                        height={50}
+                        variant="underlined"
+                      />
+                      <Input
+                        className="w-3/4"
+                        type="number"
+                        placeholder="Investment Max"
+                        onChange={(e) => setInvestmentMax(e.target.value)}
+                        height={50}
+                        variant="underlined"
+                      />
+
+                      <Select
+                        className="w-1/2 sm:col-span-2"
+                        label="Series"
+                        variant="underlined"
+                        onChange={(e) => setSeries(e.target.value)}
+                      >
+                        {seriesStages.map((stage) => (
+                          <SelectItem key={stage} value={stage}>
+                            {stage}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+
+                    {/* Advanced Search */}
+                    {isAdvanced && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                        <Select
+                          className="w-[37%]"
+                          label="City"
+                          variant="underlined"
+                          onChange={(e) => setCity(e.target.value)}
+                        >
+                          {cities.map((city) => (
+                            <SelectItem key={city} value={city}>
+                              {city}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                        <div className="w-[47%] gap-2 flex flex-row text-left -mt-3">
+                          <RadioGroup
+                            label="Prop-Tech Only?"
+                            orientation="horizontal"
+                            className="text-slate-700 text-sm font-medium mt-3"
+                          >
+                            <div className="flex flex-row items-center gap-5">
+                              <label className="flex items-center gap-2">
+                                <Radio
+                                  value="Yes"
+                                  checked={propTech === "Yes"}
+                                  onChange={(e) => setPropTech(e.target.value)}
+                                  className=" h-4 text-primary-150 focus:ring-primary-50"
+                                />
+                                Yes
+                              </label>
+                              <label className="flex items-center gap-2">
+                                <Radio
+                                  value="No"
+                                  checked={propTech === "No"}
+                                  onChange={(e) => setPropTech(e.target.value)}
+                                  className="h-4 text-primary-150 focus:ring-primary-50"
+                                />
+                                No
+                              </label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+
+                        <Select
+                          className="w-[37%] sm:col-span-2"
+                          label="Tech Medium"
+                          variant="underlined"
+                          onChange={(e) => setTechMedium(e.target.value)}
+                        >
+                          {techMediums.map((medium) => (
+                            <SelectItem key={medium} value={medium}>
+                              {medium}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
+                    )}
+
+                    {/* Search Button */}
+                    <div className="flex flex-wrap justify-center gap-2 mt-6">
+                      <Button
+                        onClick={handleSearch}
+                        className="bg-primary-800 px-4 py-2 rounded-full text-white font-bold"
+                      >
+                        Search
+                      </Button>
+                      <Button
+                        onClick={clearFilteredSearch}
+                        className="bg-red-500 text-white px-4 py-2 rounded-full font-bold"
+                      >
+                        Clear
                       </Button>
                     </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            ) : (
-              <p className="justify-center items-center text-gray-300 mt-10">
-                No investors found. Try another search.
-              </p>
-            )}
-          </div>
+                  </div>
 
-          {/* Popup Modal */}
-          {selectedInvestor && (
-            <div className="fixed top-0 left-0 w-full h-full flex justify-center items-center bg-black bg-opacity-50 z-50">
-              <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
-                <h2 className="text-xl font-semibold">
-                  {selectedInvestor.name}
-                </h2>
-                <p className="text-gray-600">{selectedInvestor.city}</p>
-                <p className="mt-2 text-medium text-gray-800">
-                  Email:
-                  <a
-                    href={`mailto:${selectedInvestor.email}`}
-                    className="hover:underline"
-                  >
-                    {selectedInvestor.email}
-                  </a>
-                </p>
+                  <motion.div className="w-[2500px] h-[460px] max-w-7xl ml-0 pt-5 pr-30 pl-30 text-left">
+                    {investors.length > 0 ? (
+                      <Swiper
+                        modules={[Navigation, Pagination]}
+                        spaceBetween={20}
+                        effect="slide"
+                        slidesPerView={3}
+                        navigation
+                        centeredSlides={false}
+                        initialSlide={0}
+                        pagination={{ clickable: true }}
+                        breakpoints={{
+                          640: { slidesPerView: 1 },
+                          768: { slidesPerView: 2 },
+                          1024: { slidesPerView: 3 },
+                        }}
+                        className="w-full h-full justify-start py-6"
+                      >
+                        {investors.map((investor, index) => (
+                          <SwiperSlide
+                            key={index}
+                            className="flex justify-start"
+                          >
+                            <motion.div
+                              whileHover="hover"
+                              transition={{
+                                duration: 1,
+                                ease: "backInOut",
+                              }}
+                              variants={{
+                                hover: {
+                                  scale: 1.05,
+                                },
+                              }}
+                              className="relative flex flex-col justify-between h-[420px] md:w-[350px] lg:w-[400px] shrink-0 overflow-hidden bg-white rounded-lg p-5 z-10 shadow-md"
+                            >
+                              <Background />
+                              <motion.h3 className="text-2xl md:text-3xl text-primary font-semibold z-20 mb-1">
+                                {investor.name}
+                              </motion.h3>
+                              <motion.p className="text-sm md:text-base text-gray-600 z-20">
+                                {investor.city}
+                              </motion.p>
+                              <motion.div className="mt-4 space-y-2 z-20">
+                                <motion.p className="mt-2 text-lg md:text-xl text-gray-800 z-20">
+                                  Sector: {investor.sector}
+                                </motion.p>
+                                <motion.p className="mt-2 text-lg md:text-xl text-gray-800 z-20">
+                                  Series: {investor.funding_stage}
+                                </motion.p>
+                                <motion.p className="text-lg md:text-xl text-gray-800 z-20">
+                                  Investment Range: ${investor.investment_min} -
+                                  ${investor.investment_max}
+                                </motion.p>
+                              </motion.div>
+                              <Button
+                                onClick={() => setSelectedInvestor(investor)}
+                                className="z-20 py-2 text-center backdrop-blur bg-primary-800 mt-6 rounded text-white font-bold w-full"
+                              >
+                                Get Details
+                              </Button>
+                            </motion.div>
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                    ) : (
+                      <motion.p className="justify-center items-center text-gray-300 py-8">
+                        No investors found. Try another search.
+                      </motion.p>
+                    )}
+                  </motion.div>
 
-                {selectedInvestor.video_link &&
-                  (() => {
-                    let videoUrl = "#"; // Default in case of errors
-                    try {
-                      const parsedLink = JSON.parse(
-                        selectedInvestor.video_link
-                      );
-                      videoUrl = parsedLink.hyperlink || parsedLink.text;
-                    } catch (error) {
-                      console.error("Error parsing video link:", error);
-                    }
-                    return (
-                      <div className="flex justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={1.5}
-                          stroke="currentColor"
-                          className="size-6 mt-2.5 text-primary-700 "
+                  {/* Popup Modal */}
+                  {selectedInvestor && (
+                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-70 z-50 p-4 sm:p-6 md:p-8 overflow-y-auto">
+                      <div className="bg-white dark:bg-gray-800 rounded-xl w-[20%] p-5 shadow-2xl max-w-sm sm:max-w-md md:max-w-lg relative transform transition-all mx-auto animate-fadeIn">
+                        <h2 className="text-2xl font-semibold text-primary-800">
+                          {selectedInvestor.name}
+                        </h2>
+                        <p className="text-base text-primary-700 mb-4">
+                          {selectedInvestor.city}
+                        </p>
+                        {/* <div className="space-y-4"> */}
+                        <div className="flex items-start gap-3">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="w-5 h-5 text-primary-700 dark:text-primary-400 mt-0.5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                            />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-base font-bold text-primary-800 dark:text-gray-400 mb-1">
+                              <a
+                                href={`mailto:${selectedInvestor.email}`}
+                                className="text-primary-700 hover:underline break-all"
+                              >
+                                {selectedInvestor.email}
+                              </a>
+                            </p>
+                          </div>
+                        </div>
+
+                        {selectedInvestor.video_link &&
+                          (() => {
+                            let videoUrl = "#"; // Default in case of errors
+                            try {
+                              const parsedLink = JSON.parse(
+                                selectedInvestor.video_link
+                              );
+                              videoUrl =
+                                parsedLink.hyperlink || parsedLink.text;
+                            } catch (error) {
+                              console.error("Error parsing video link:", error);
+                            }
+                            return (
+                              <div className="flex">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.5}
+                                  stroke="currentColor"
+                                  className="size-6 mt-2.5 text-primary-700 "
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
+                                  />
+                                </svg>
+
+                                <a
+                                  href={videoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary-700 font-bold text-[19px] hover:underline mt-2 block"
+                                >
+                                  Watch Video
+                                </a>
+                              </div>
+                            );
+                          })()}
+
+                        {/* Close Button */}
+                        <Button
+                          className="absolute top-2 right-2 px-4 py-3 sm:px-6 justify-end"
+                          onClick={() => setSelectedInvestor(null)}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
-                          />
-                        </svg>
-
-                        <a
-                          href={videoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-700 font-bold text-[19px] hover:underline mt-2 block"
-                        >
-                          Watch Video
-                        </a>
+                          ❌
+                        </Button>
                       </div>
-                    );
-                  })()}
-
-                {/* Close Button */}
-                <Button
-                  className="absolute top-2 right-2"
-                  onClick={() => setSelectedInvestor(null)}
-                >
-                  ❌
-                </Button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Search Section */}
+            )}
+          </TabPanel>
+        </TabContext>
+      </Box>
     </div>
   );
 }
