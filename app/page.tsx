@@ -210,7 +210,7 @@ export default function Home() {
 
       setResults(response.data);
     } catch (error) {
-      console.error("❌ Error fetching search results:", error);
+      console.error("Error fetching search results:", error);
     }
   };
 
@@ -262,7 +262,7 @@ export default function Home() {
       <div className="text-center px-4 py-6 md:py-8 max-w-full overflow-hidden">
         <TypewriterEffectSmooth
           words={words}
-          className="text-primary text-center text-xl"
+          className="text-primary text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl"
         />
         <p className="text-white text-sm md:text-lg mt-2">
           Find your perfect investor for your startup today...
@@ -519,8 +519,9 @@ export default function Home() {
                           placement: "bottom",
                           offset: 10,
                           shouldFlip: true,
+                          isOpen: true,
                         }}
-                        // isRequired={true}
+                        listboxProps={{ itemMinWidth: "200px" }}
                       >
                         {sectors.map((sec) => (
                           <SelectItem key={sec} value={sec}>
