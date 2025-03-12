@@ -1,5 +1,7 @@
 # Investor Matching Tool - Frontend
 
+![image](https://github.com/user-attachments/assets/20d779c4-bf0b-46d9-bb0c-a8ea3164da22)
+
 ## Overview
 
 The Investor Matching Tool is a web application designed to help startups and entrepreneurs find the right investors based on various criteria. This frontend is built using *Next.js, React, and Tailwind CSS*, providing a sleek and user-friendly interface for searching and filtering investors.
