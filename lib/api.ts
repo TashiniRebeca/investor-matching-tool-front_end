@@ -2,12 +2,12 @@ import axios from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
 
-const apiClient = axios.create({
-  baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+// const apiClient = axios.create({
+//   baseURL: API_URL,
+//   headers: {
+//     "Content-Type": "application/json",
+//   },
+// });
 
 // Define the Investor type
 type Investor = {
@@ -37,7 +37,7 @@ export const searchInvestors = async (searchParams: {
   isAdvanced: boolean;
 }): Promise<Investor[]> => {
   try {
-    const response = await apiClient.get(`/api/investors/search`, {
+    const response = await axios.get(`${API_URL}/api/investors/search`, {
       params: searchParams,
     });
 
@@ -52,7 +52,7 @@ export const manualSearchInvestors = async (
   sector: string
 ): Promise<Investor[]> => {
   try {
-    const response = await apiClient.get(`/api/manual-search`, {
+    const response = await axios.get(`${API_URL}/api/manual-search`, {
       params: { sector },
     });
 
