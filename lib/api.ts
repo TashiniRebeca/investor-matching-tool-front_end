@@ -62,3 +62,15 @@ export const manualSearchInvestors = async (
     return [];
   }
 };
+
+export const fetchInvestorOptions = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/api/investor-options`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching investor options:", error);
+    return null;
+  }
+};
+
+console.log("✅ API_URL:", API_URL);
