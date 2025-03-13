@@ -37,7 +37,7 @@ export const searchInvestors = async (searchParams: {
   isAdvanced: boolean;
 }): Promise<Investor[]> => {
   try {
-    const response = await apiClient.get(`/investors/search`, {
+    const response = await apiClient.get(`${API_URL}/api/investors/search`, {
       params: searchParams,
     });
 
@@ -52,7 +52,7 @@ export const manualSearchInvestors = async (
   sector: string
 ): Promise<Investor[]> => {
   try {
-    const response = await apiClient.get(`/manual-search`, {
+    const response = await apiClient.get(`${API_URL}/api/manual-search`, {
       params: { sector },
     });
 
