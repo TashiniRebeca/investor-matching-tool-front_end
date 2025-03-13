@@ -43,7 +43,7 @@ type Investor = {
   id: number;
   name: string;
   sector: string;
-  email: string;
+  email?: string;
   funding_stage: string;
   country: string;
   investment_min: string;
@@ -521,10 +521,10 @@ export default function Home() {
                           shouldFlip: true,
                           isOpen: true,
                         }}
-                        listboxProps={{ itemMinWidth: "200px" }}
+                        listboxProps={{ itemType: "200px" }}
                       >
                         {sectors.map((sec) => (
-                          <SelectItem key={sec} value={sec}>
+                          <SelectItem key={sec} textValue={sec}>
                             {sec}
                           </SelectItem>
                         ))}
@@ -537,7 +537,7 @@ export default function Home() {
                         onChange={(e) => setGeography(e.target.value)}
                       >
                         {geographies.map((geo) => (
-                          <SelectItem key={geo} value={geo}>
+                          <SelectItem key={geo} textValue={geo}>
                             {geo}
                           </SelectItem>
                         ))}
@@ -561,13 +561,13 @@ export default function Home() {
                       />
 
                       <Select
-                        className="w-1/2 sm:col-span-2"
+                        className="w-[37%] sm:col-span-2"
                         label="Series"
                         variant="underlined"
                         onChange={(e) => setSeries(e.target.value)}
                       >
                         {seriesStages.map((stage) => (
-                          <SelectItem key={stage} value={stage}>
+                          <SelectItem key={stage} textValue={stage}>
                             {stage}
                           </SelectItem>
                         ))}
@@ -578,13 +578,13 @@ export default function Home() {
                     {isAdvanced && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                         <Select
-                          className="w-[37%]"
+                          className="w-3/4"
                           label="City"
                           variant="underlined"
                           onChange={(e) => setCity(e.target.value)}
                         >
                           {cities.map((city) => (
-                            <SelectItem key={city} value={city}>
+                            <SelectItem key={city} textValue={city}>
                               {city}
                             </SelectItem>
                           ))}
@@ -625,7 +625,7 @@ export default function Home() {
                           onChange={(e) => setTechMedium(e.target.value)}
                         >
                           {techMediums.map((medium) => (
-                            <SelectItem key={medium} value={medium}>
+                            <SelectItem key={medium} textValue={medium}>
                               {medium}
                             </SelectItem>
                           ))}
