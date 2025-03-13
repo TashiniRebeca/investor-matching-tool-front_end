@@ -164,7 +164,7 @@ export default function Home() {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/investor-options`);
+        const response = await axios.get(`${API_URL}/investor-options`);
 
         if (response.data) {
           setSectors(response.data.sectors || []);
@@ -204,7 +204,7 @@ export default function Home() {
     if (!searchQuery.trim()) return;
 
     try {
-      const response = await axios.get(`${API_URL}/api/manual-search`, {
+      const response = await axios.get(`${API_URL}/manual-search`, {
         params: { sector: searchQuery },
       });
 
