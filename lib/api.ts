@@ -4,6 +4,17 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   "https://investor-matching-tool-b-e.vercel.app/";
 
+const normalizedBaseURL = API_URL.endsWith("/")
+  ? API_URL.slice(0, -1)
+  : API_URL;
+
+const apiClient = axios.create({
+  baseURL: normalizedBaseURL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
 // Define the Investor type
 type Investor = {
   id: number;
@@ -32,7 +43,7 @@ export const searchInvestors = async (searchParams: {
   isAdvanced: boolean;
 }): Promise<Investor[]> => {
   try {
-    const response = await axios.get(`${API_URL}/api/investors/search`, {
+    const response = await apiClient.get(`/api/investors/search`, {
       params: searchParams,
     });
 
@@ -47,7 +58,7 @@ export const manualSearchInvestors = async (
   sector: string
 ): Promise<Investor[]> => {
   try {
-    const response = await axios.get(`${API_URL}/api/manual-search`, {
+    const response = await apiClient.get(`/api/manual-search`, {
       params: { sector },
     });
 
