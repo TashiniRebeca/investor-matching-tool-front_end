@@ -160,30 +160,6 @@ export default function Home() {
     },
   }));
 
-  // Fetch dropdown options on load
-  // useEffect(() => {
-  //   const fetchOptions = async () => {
-  //     try {
-  //       const response = await axios.get(`${API_URL}/api/investor-options`);
-
-  //       if (response.data) {
-  //         setSectors(response.data.sectors || []);
-  //         setGeographies(response.data.geographies || []);
-  //         setSeriesStages(response.data.seriesStages || []);
-  //         setTechMediums(response.data.techMediums || []);
-  //         setPropTechOptions(response.data.propTechOptions || []);
-  //         setCities(response.data.cities || []);
-  //       } else {
-  //         console.warn("No data received for dropdowns.");
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching dropdown options:", error);
-  //     }
-  //   };
-
-  //   fetchOptions();
-  // }, []);
-
   useEffect(() => {
     const fetchOptions = async () => {
       try {
